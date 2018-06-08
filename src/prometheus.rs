@@ -16,16 +16,23 @@ where
 {
     for (k, v) in report.counters() {
         let name = FmtName::new(k.prefix(), k.name());
+        write_help(out, &name, k.help())?;
+        writeln!(out, "# TYPE {} counter", name)?;
         write_metric(out, &name, &k.labels().into(), v)?;
     }
 
     for (k, v) in report.gauges() {
         let name = FmtName::new(k.prefix(), k.name());
+        write_help(out, &name, k.help())?;
+        writeln!(out, "# TYPE {} gauge", name)?;
         write_metric(out, &name, &k.labels().into(), v)?;
     }
 
     for (k, h) in report.stats() {
         let name = FmtName::new(k.prefix(), k.name());
+        write_help(out, &name, k.help())?;
+        writeln!(out, "# TYPE {} histogram", name)?;
+
         let labels = k.labels().into();
         let count = h.count();
         write_metric(out, &format_args!("{}_{}", name, "count"), &labels, &count)?;
@@ -38,6 +45,12 @@ where
     }
 
     Ok(())
+}
+
+fn write_help<N, W>(out: &mut W, name: &N, help: &'static str) -> fmt::Result
+    where N: fmt::Display, W: fmt::Write {
+
+    writeln!(out, "# HELP {} {}", name, help)
 }
 
 fn write_buckets<N, W>(

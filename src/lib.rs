@@ -77,13 +77,15 @@ pub fn new() -> (Scope, Reporter) {
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Key {
     name: &'static str,
+    help: &'static str,
     prefix: Arc<Prefix>,
     labels: Labels,
 }
 impl Key {
-    fn new(name: &'static str, prefix: Arc<Prefix>, labels: Labels) -> Key {
+    fn new(name: &'static str, help: &'static str, prefix: Arc<Prefix>, labels: Labels) -> Key {
         Key {
             name,
+            help,
             prefix,
             labels,
         }
@@ -91,6 +93,9 @@ impl Key {
 
     pub fn name(&self) -> &'static str {
         self.name
+    }
+    pub fn help(&self) -> &'static str {
+        self.help
     }
     pub fn prefix(&self) -> &Arc<Prefix> {
         &self.prefix
@@ -143,8 +148,8 @@ impl Scope {
     }
 
     /// Creates a Counter with the given name.
-    pub fn counter(&self, name: &'static str) -> Counter {
-        let key = Key::new(name, self.prefix.clone(), self.labels.clone());
+    pub fn counter(&self, name: &'static str, help: &'static str) -> Counter {
+        let key = Key::new(name, help, self.prefix.clone(), self.labels.clone());
         let mut reg = self.registry.lock().expect(
             "failed to obtain lock on registry",
         );
@@ -160,8 +165,8 @@ impl Scope {
     }
 
     /// Creates a Gauge with the given name.
-    pub fn gauge(&self, name: &'static str) -> Gauge {
-        let key = Key::new(name, self.prefix.clone(), self.labels.clone());
+    pub fn gauge(&self, name: &'static str, help: &'static str) -> Gauge {
+        let key = Key::new(name, help, self.prefix.clone(), self.labels.clone());
         let mut reg = self.registry.lock().expect(
             "failed to obtain lock on registry",
         );
@@ -179,28 +184,28 @@ impl Scope {
     /// Creates a Stat with the given name.
     ///
     /// The underlying histogram is automatically resized as values are added.
-    pub fn stat(&self, name: &'static str) -> Stat {
-        let key = Key::new(name, self.prefix.clone(), self.labels.clone());
+    pub fn stat(&self, name: &'static str, help: &'static str) -> Stat {
+        let key = Key::new(name, help, self.prefix.clone(), self.labels.clone());
         self.mk_stat(key, None)
     }
 
-    pub fn timer_us(&self, name: &'static str) -> Timer {
+    pub fn timer_us(&self, name: &'static str, help: &'static str) -> Timer {
         Timer {
-            stat: self.stat(name),
+            stat: self.stat(name, help),
             unit: TimeUnit::Micros,
         }
     }
 
-    pub fn timer_ms(&self, name: &'static str) -> Timer {
+    pub fn timer_ms(&self, name: &'static str, help: &'static str) -> Timer {
         Timer {
-            stat: self.stat(name),
+            stat: self.stat(name, help),
             unit: TimeUnit::Millis,
         }
     }
 
     /// Creates a Stat with the given name and histogram paramters.
-    pub fn stat_with_bounds(&self, name: &'static str, low: u64, high: u64) -> Stat {
-        let key = Key::new(name, self.prefix.clone(), self.labels.clone());
+    pub fn stat_with_bounds(&self, name: &'static str, help: &'static str, low: u64, high: u64) -> Stat {
+        let key = Key::new(name, help, self.prefix.clone(), self.labels.clone());
         self.mk_stat(key, Some((low, high)))
     }
 
